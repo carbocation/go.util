@@ -7,17 +7,21 @@ import (
 
 func main() {
     //Run with max possible CPUs
-    parallelism := 4
-    runtime.GOMAXPROCS(runtime.NumCPU())
+    numCpu := runtime.NumCPU()
+    runtime.GOMAXPROCS(numCpu)
     
-    var N int = 1e3 //Number of integers that will be in the channel
+    //Number of integers that will be in the channel
+    var N int = 1e7
 
-    c := make(chan int, parallelism) //Create our channel
+    //Create our channel with enough space to hold all integers at once
+    c := make(chan int, N)
 
     //In a separate thread, fill the channel
     go func() {
         defer close(c)
-        fillChannel(c, N)
+        start := 0
+        stop := N
+        fillChannel(c, start, stop)
     }()
 
     //In this thread, drain the channel
@@ -26,16 +30,16 @@ func main() {
     fmt.Println("By manual counting, the sum of all integers from 0 to",(N-1),"is",sum)
 }
 
-func fillChannel(c chan int, N int) {
-    for i := 0; i < N; i++ {
+func fillChannel(c chan int, start int, stop int) {
+    for i := start; i < stop; i++ {
         c <- i
     }
 }
 
-func drainChannel(c chan int) int {
-    x := 0
+func drainChannel(c chan int) int64 {
+    var x int64 = 0
     for i := range c {
-        x += i
+        x += int64(i)
     }
 
     return x
