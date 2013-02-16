@@ -13,7 +13,7 @@ func main() {
     
     //Number of integers that will be in the channel
     //We will start at 0, so if N==1 then you will sum 0, if N==3 you will sum 1+2, etc.
-    var N int64 = 1e8
+    var N int64 = 100000008
 
     //Create our channel with enough space to hold all integers at once
     c := make(chan int64, N)
@@ -35,17 +35,18 @@ func main() {
         stop = int64(i+1) * N/numGoRoutines
 
         go func(start int64, stop int64) {
-            fmt.Println("Filling channel from",start,"to",stop)
+            fmt.Println("Mapping entries from",start,"to",stop,"to their own goroutine")
             fillChannel(c, start, stop)
         }(start, stop)
     }
     if stop < N {
-        fmt.Println("Finally filling channel from",stop,"to",N)
+        fmt.Println("Finally, mapping entries from",stop,"to",N,"to their own goroutine")
         go fillChannel(c, stop, N)
     }
 
     //In this thread, drain the channel (for example, you could print the records here)
     //This is basically the reduce step (one reducer)
+    fmt.Println("Reducing has begun")
     sum := drainChannel(c, N)
 
     fmt.Println("By manual counting, the sum of all integers from 0 to",(N-1),"is",sum)
