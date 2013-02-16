@@ -10,7 +10,7 @@ func main() {
     parallelism := 4
     runtime.GOMAXPROCS(runtime.NumCPU())
     
-    var N int = 1e5 //Number of integers that will be in the channel
+    var N int = 1e3 //Number of integers that will be in the channel
 
     c := make(chan int, parallelism) //Create our channel
 
@@ -20,23 +20,23 @@ func main() {
         fillChannel(c, N)
     }()
 
-    //In this thread, drain the channel as it fills
-    func() {
-        drainChannel(c)
-    }()
+    //In this thread, drain the channel
+    sum := drainChannel(c)
 
-    fmt.Println(parallelism)
+    fmt.Println("By manual counting, the sum of all integers from 0 to",(N-1),"is",sum)
 }
 
 func fillChannel(c chan int, N int) {
     for i := 0; i < N; i++ {
-        fmt.Println("Filling channel")
         c <- i
     }
 }
 
-func drainChannel(c chan int) {
+func drainChannel(c chan int) int {
+    x := 0
     for i := range c {
-        fmt.Println("Draining channel of",i)
+        x += i
     }
+
+    return x
 }
