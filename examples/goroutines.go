@@ -18,14 +18,14 @@ func main() {
 
     //In a separate thread, fill the channel
     go func() {
-        defer close(c)
+        //defer close(c)
         start := 0
         stop := N
         fillChannel(c, start, stop)
     }()
 
-    //In this thread, drain the channel
-    sum := drainChannel(c)
+    //In this thread, drain the channel (for example, you could print the records here)
+    sum := drainChannel(c, N)
 
     fmt.Println("By manual counting, the sum of all integers from 0 to",(N-1),"is",sum)
 }
@@ -36,10 +36,10 @@ func fillChannel(c chan int, start int, stop int) {
     }
 }
 
-func drainChannel(c chan int) int64 {
+func drainChannel(c chan int, N int) int64 {
     var x int64 = 0
-    for i := range c {
-        x += int64(i)
+    for i := 0; i < N; i++ {
+        x += int64(<-c)
     }
 
     return x
