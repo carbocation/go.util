@@ -2,43 +2,41 @@ package main
 
 import (
     "fmt"
-    //"time"
     "runtime"
 )
 
 func main() {
-    //Run with 4 CPUs
-    parallelism := runtime.GOMAXPROCS(runtime.NumCPU())
+    //Run with max possible CPUs
+    parallelism := 4
+    runtime.GOMAXPROCS(runtime.NumCPU())
     
-    //var N int = 3
-    c := make(chan int, parallelism)
+    var N int = 1e5 //Number of integers that will be in the channel
 
+    c := make(chan int, parallelism) //Create our channel
+
+    //In a separate thread, fill the channel
     go func() {
         defer close(c)
-
-        fmt.Println("Filling channel")
-        c <- 3
-        fmt.Println("Filling channel")
-        c <- 2
-        fmt.Println("Filling channel")
-        c <- 1
+        fillChannel(c, N)
     }()
 
+    //In this thread, drain the channel as it fills
     func() {
-        lcm1 := len(c)
-        k := 0
-        
-        for i := range c {
-            k++
-            fmt.Println("Draining channel of",i)
-
-            if k == lcm1 {
-                //close(c)
-            }
-        }
+        drainChannel(c)
     }()
 
-    //time.Sleep(5 * 1e9)
-    //defer close(c)
-    //fmt.Println(N, c)
+    fmt.Println(parallelism)
+}
+
+func fillChannel(c chan int, N int) {
+    for i := 0; i < N; i++ {
+        fmt.Println("Filling channel")
+        c <- i
+    }
+}
+
+func drainChannel(c chan int) {
+    for i := range c {
+        fmt.Println("Draining channel of",i)
+    }
 }
