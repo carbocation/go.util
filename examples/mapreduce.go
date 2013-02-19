@@ -27,7 +27,9 @@ func main() {
 	//relying on deferred closure from the filling channel which would limit us to 1
 	//filling goroutine at a time.
 
-	//This is basically the map step (one mapper)
+	//This is basically the map step (arbitrarily, 4 mappers per logical CPU; you want 
+    //at least 1 per logical CPU, and unless you have strong reasons to think all will 
+    //take exactly the same amount of time, you should have a few mappers per logical CPU)
 	var start, stop int64 = 0, 0
 	numGoRoutines := int64(numCpu * 4)
 	for i := 0; int64(i) < numGoRoutines; i++ {
