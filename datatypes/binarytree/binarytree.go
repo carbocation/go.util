@@ -7,7 +7,7 @@
 // Package binarytree implements a binary tree, derived from the container/list code
 //
 // To iterate over a tree (where l is a *Tree):
-//	for e := l.Front(); e != nil; e = e.Next() {
+//	for e := l.Front(); e != nil; e = e.Left() {
 //		// do something with e.Value
 //	}
 //
@@ -15,9 +15,10 @@ package binarytree
 
 // Element is an element in the tree.
 type Element struct {
-	// Next and previous pointers in the doubly-linked tree of elements.
-	// The root of the tree has parent = nil, and the leaf of a tree has child = nil.
-	child, parent *Element
+	// Parent, left, and right pointers in the tree of elements.
+	// The root of the tree has parent = nil
+    // Each leaf of a tree has left = nil.
+	parent, left, right *Element
 
 	// The tree to which this element belongs.
 	tree *Tree
@@ -26,11 +27,14 @@ type Element struct {
 	Value interface{}
 }
 
-// Next returns the child tree element or nil.
-func (e *Element) Next() *Element { return e.child }
+// Left returns the left tree element or nil.
+func (e *Element) Left() *Element { return e.left }
 
-// Prev returns the previous tree element or nil.
-func (e *Element) Prev() *Element { return e.parent }
+// Right returns the right tree element or nil.
+func (e *Element) Right() *Element { return e.right }
+
+// Parent returns the parent tree element or nil.
+func (e *Element) Parent() *Element { return e.parent }
 
 // Tree represents a doubly linked tree.
 // The zero value for Tree is an empty tree ready to use.
@@ -72,18 +76,18 @@ func (l *Tree) remove(e *Element) {
 		return
 	}
 	if e.parent == nil {
-		l.front = e.child
+		l.front = e.left
 	} else {
-		e.parent.child = e.child
+		e.parent.left = e.left
 	}
-	if e.child == nil {
+	if e.left == nil {
 		l.back = e.parent
 	} else {
-		e.child.parent = e.parent
+		e.left.parent = e.parent
 	}
 
 	e.parent = nil
-	e.child = nil
+	e.left = nil
 	l.len--
 }
 
@@ -92,23 +96,23 @@ func (l *Tree) insertBefore(e *Element, mark *Element) {
 		// new front of the tree
 		l.front = e
 	} else {
-		mark.parent.child = e
+		mark.parent.left = e
 	}
 	e.parent = mark.parent
 	mark.parent = e
-	e.child = mark
+	e.left = mark
 	l.len++
 }
 
 func (l *Tree) insertAfter(e *Element, mark *Element) {
-	if mark.child == nil {
+	if mark.left == nil {
 		// new back of the tree
 		l.back = e
 	} else {
-		mark.child.parent = e
+		mark.left.parent = e
 	}
-	e.child = mark.child
-	mark.child = e
+	e.left = mark.left
+	mark.left = e
 	e.parent = mark
 	l.len++
 }
@@ -117,7 +121,7 @@ func (l *Tree) insertFront(e *Element) {
 	if l.front == nil {
 		// empty tree
 		l.front, l.back = e, e
-		e.parent, e.child = nil, nil
+		e.parent, e.left = nil, nil
 		l.len = 1
 		return
 	}
@@ -128,7 +132,7 @@ func (l *Tree) insertBack(e *Element) {
 	if l.back == nil {
 		// empty tree
 		l.front, l.back = e, e
-		e.parent, e.child = nil, nil
+		e.parent, e.left = nil, nil
 		l.len = 1
 		return
 	}
@@ -137,14 +141,14 @@ func (l *Tree) insertBack(e *Element) {
 
 // PushFront inserts the value at the front of the tree and returns a new Element containing the value.
 func (l *Tree) PushFront(value interface{}) *Element {
-	e := &Element{nil, nil, l, value}
+	e := &Element{nil, nil, nil, l, value}
 	l.insertFront(e)
 	return e
 }
 
 // PushBack inserts the value at the back of the tree and returns a new Element containing the value.
 func (l *Tree) PushBack(value interface{}) *Element {
-	e := &Element{nil, nil, l, value}
+	e := &Element{nil, nil, nil, l, value}
 	l.insertBack(e)
 	return e
 }
@@ -154,7 +158,7 @@ func (l *Tree) InsertBefore(value interface{}, mark *Element) *Element {
 	if mark.tree != l {
 		return nil
 	}
-	e := &Element{nil, nil, l, value}
+	e := &Element{nil, nil, nil, l, value}
 	l.insertBefore(e, mark)
 	return e
 }
@@ -164,7 +168,7 @@ func (l *Tree) InsertAfter(value interface{}, mark *Element) *Element {
 	if mark.tree != l {
 		return nil
 	}
-	e := &Element{nil, nil, l, value}
+	e := &Element{nil, nil, nil, l, value}
 	l.insertAfter(e, mark)
 	return e
 }
@@ -193,7 +197,7 @@ func (l *Tree) Len() int { return l.len }
 // PushBackTree inserts each element of ol at the back of the tree.
 func (l *Tree) PushBackTree(ol *Tree) {
 	last := ol.Back()
-	for e := ol.Front(); e != nil; e = e.Next() {
+	for e := ol.Front(); e != nil; e = e.Left() {
 		l.PushBack(e.Value)
 		if e == last {
 			break
@@ -204,7 +208,7 @@ func (l *Tree) PushBackTree(ol *Tree) {
 // PushFrontTree inserts each element of ol at the front of the tree. The ordering of the passed tree is preserved.
 func (l *Tree) PushFrontTree(ol *Tree) {
 	first := ol.Front()
-	for e := ol.Back(); e != nil; e = e.Prev() {
+	for e := ol.Back(); e != nil; e = e.Parent() {
 		l.PushFront(e.Value)
 		if e == first {
 			break
