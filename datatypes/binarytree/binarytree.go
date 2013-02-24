@@ -68,6 +68,8 @@ func (e *Tree) pushTree(direction string, value interface{}) *Tree {
 }
 
 // Traverse the tree and send output to a channel
+// Note that this is simply one reference implementation. For some applications, 
+// e.g., threaded discussion, something like this would be implemented in the view.
 func Walk(el *Tree, ch chan interface{}) {
     if el == nil {
         return
