@@ -13,6 +13,10 @@
 //
 package binarytree
 
+import (
+//    "fmt"
+)
+
 // Element is an element in the tree.
 type Element struct {
 	// Parent, left, and right pointers in the tree of elements.
@@ -50,11 +54,89 @@ func (tree *Tree) Init() *Tree {
 	return tree
 }
 
-// New returns an initialized tree.
-func New() *Tree { return new(Tree) }
-
 // Root returns the first element in the tree.
 func (tree *Tree) Root() *Element { return tree.root }
+
+// Len returns the number of elements in the tree.
+func (tree *Tree) Len() int { return tree.len }
+
+// New returns an initialized tree.
+func New(firstElementValue interface{}) *Tree {
+    /*
+    Create a new tree.
+    Require that its first element be passed.
+    */
+    tree := new(Tree)
+    
+    e := &Element{nil, nil, nil, tree, firstElementValue}
+
+    tree.root, tree.len = e, 1
+
+    return tree
+}
+
+// PushLeft inserts a left node's value under the specified Element and returns a new Element containing the value.
+func (e *Element) PushLeft(value interface{}) *Element {
+    return e.pushElement("left", value)
+}
+
+// PushRight inserts a right node's value under the specified Element and returns a new Element containing the value.
+func (e *Element) PushRight(value interface{}) *Element {
+    return e.pushElement("right", value)
+}
+
+func (e *Element) pushElement(direction string, value interface{}) *Element {
+    // Update the tree
+    tree := e.tree
+    tree.len += 1
+
+    // Create the new element el, record that the parent is e
+    el := &Element{e, nil, nil, tree, value}
+
+    //TODO
+    // SWITCH/CASE to append to left or right depending on correct output
+    // Update the parent element e, record that its left value is el
+    switch {
+    case direction == "left":
+        e.left = el
+    
+    case direction == "right":
+        e.right = el
+    }
+
+    // Return the new element
+    return el
+}
+
+func Walk(el *Element, ch chan string) {
+    if el == nil {
+        return
+    }
+
+    ch <- "<block" + el.Value.(string) + ">"
+    ch <- el.Value.(string)
+    Walk(el.left, ch)
+    Walk(el.right, ch)
+    ch <- "</block" + el.Value.(string) + ">"
+}
+
+func Walker(e *Element) <-chan string {
+	ch := make(chan string)
+	go func() {
+		Walk(e, ch)
+		close(ch)
+	}()
+	return ch
+}
+
+
+
+
+
+
+
+
+
 
 // PushFront inserts the value at the front of the tree and returns a new Element containing the value.
 func (tree *Tree) PushFront(value interface{}) *Element {
@@ -83,8 +165,8 @@ func (tree *Tree) InsertAfter(value interface{}, mark *Element) *Element {
 	return e
 }
 
-// Len returns the number of elements in the tree.
-func (tree *Tree) Len() int { return tree.len }
+
+
 
 // remove the element from the tree, but do not clear the Element's tree field.
 // This is so that other Tree methods may use remove when relocating Elements
