@@ -73,7 +73,7 @@ func Walk(el *Tree, ch chan interface{}) {
         return
     }
 
-    ch <- el.Value.(string)
+    ch <- el.Value
     Walk(el.left, ch)
     Walk(el.right, ch)
 }
