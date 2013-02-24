@@ -5,31 +5,24 @@ import (
     "fmt"
 )
 
+// In this test, we are creating an unbalanced binary tree
 func TestTree(t *testing.T) {
-    T := New("Root")
-    //E := L.PushFront(1)
-    //E := L.Root()
-    e := T.Root()
-    e.PushLeft("Depth1 Left")
-    e.PushRight("Depth1 Right")
-    e2 := e.Left()
-    //e3 := e.Right()
-    e2.PushLeft("Depth2/Left Left")
-    e2.PushRight("Depth2/Left Right")
+    e := New("Root")
+    e.PushLeft("Root:Left")
+    e.PushRight("Root:Right")
+    e.Left().PushLeft("Root:Left:Left")
+    e.Left().PushRight("Root:Left:Right")
+    e.Left().Right().PushRight("Root:Left:Right:Right")
     
-    fmt.Printf("%v, %v, %v\n",e, e2, T)
+    fmt.Printf("%v, %v, %v\n",e)
 
+    //Get a channel with our output and print it out line by line
     x := Walker(e)
-    fmt.Println("TEST")
+    val := ""
     for y := range x {
         fmt.Println(y)
+        val += y.(string) + "::"
     }
-    //Walk(e)
-    
-    /*
-    cur := L.Root().Value
-    if cur != 0 {
-        t.Errorf("L.Next() should yield 0 here; yields %v", cur)
-    }
-    */
+
+    fmt.Println(val)
 }
