@@ -1,16 +1,12 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
+// Copyright 2013 James Pirruccello <james@carbocation.com>
+// All rights reserved.
+// Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
 
-// Copyright 2013 James Pirruccello <james@carbocation.com>
-// Use of this source code is governed by the MIT license
-
-// Package binarytree implements a binary tree, derived from the container/list code
+// Package binarytree implements a binary tree
 //
-// To iterate over a tree (where tree is a *Tree):
-//	for e := tree.Root(); e != nil; e = e.Left() {
-//		// do something with e.Value
-//	}
+// To iterate over a tree (where tree is a *Tree), 
+// use the Walk() function or a similar method.
 //
 package binarytree
 
