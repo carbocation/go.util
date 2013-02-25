@@ -14,7 +14,7 @@ package binarytree
 type Tree struct {
 	// Parent, left, and right pointers in the tree of elements.
 	// The root of the tree has parent = nil
-    // Each leaf of a tree has left = nil.
+	// Each leaf of a tree has left = nil.
 	parent, left, right *Tree
 
 	// The contents of this tree element.
@@ -22,7 +22,7 @@ type Tree struct {
 }
 
 func New(value interface{}) *Tree {
-    return &Tree{Value: value}
+	return &Tree{Value: value}
 }
 
 // Left returns the left tree element or nil.
@@ -45,44 +45,44 @@ func (e *Tree) SetParent(replacement *Tree) { e.parent = replacement }
 
 // PushLeft inserts a left node's value under the specified Tree and returns a new Tree containing the value.
 func (e *Tree) PushLeft(value interface{}) *Tree {
-    return e.pushTree("left", value)
+	return e.pushTree("left", value)
 }
 
 // PushRight inserts a right node's value under the specified Tree and returns a new Tree containing the value.
 func (e *Tree) PushRight(value interface{}) *Tree {
-    return e.pushTree("right", value)
+	return e.pushTree("right", value)
 }
 
 // Wrapped 
 func (e *Tree) pushTree(direction string, value interface{}) *Tree {
-    // Create the new element el, record that the parent is e
-    el := &Tree{e, nil, nil, value}
+	// Create the new element el, record that the parent is e
+	el := &Tree{e, nil, nil, value}
 
-    // SWITCH/CASE to append to left or right depending on correct output
-    // Update the parent element e, record that its left value is el
-    switch {
-    case direction == "left":
-        e.left = el
-    
-    case direction == "right":
-        e.right = el
-    }
+	// SWITCH/CASE to append to left or right depending on correct output
+	// Update the parent element e, record that its left value is el
+	switch {
+	case direction == "left":
+		e.left = el
 
-    // Return the new element
-    return el
+	case direction == "right":
+		e.right = el
+	}
+
+	// Return the new element
+	return el
 }
 
 // Traverse the tree and send output to a channel
 // Note that this is simply one reference implementation. For some applications, 
 // e.g., threaded discussion, something like this would be implemented in the view.
 func Walk(el *Tree, ch chan interface{}) {
-    if el == nil {
-        return
-    }
+	if el == nil {
+		return
+	}
 
-    ch <- el.Value
-    Walk(el.left, ch)
-    Walk(el.right, ch)
+	ch <- el.Value
+	Walk(el.left, ch)
+	Walk(el.right, ch)
 }
 
 // Wrapper for the Walk method that creates a string channel for output
