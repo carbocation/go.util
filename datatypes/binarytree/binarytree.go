@@ -34,6 +34,15 @@ func (e *Tree) Right() *Tree { return e.right }
 // Parent returns the parent tree element or nil.
 func (e *Tree) Parent() *Tree { return e.parent }
 
+// Set the left tree element or nil
+func (e *Tree) SetLeft(replacement *Tree) { e.left = replacement }
+
+// Set the right tree element or nil
+func (e *Tree) SetRight(replacement *Tree) { e.right = replacement }
+
+// Set the parent tree element or nil
+func (e *Tree) SetParent(replacement *Tree) { e.parent = replacement }
+
 // PushLeft inserts a left node's value under the specified Tree and returns a new Tree containing the value.
 func (e *Tree) PushLeft(value interface{}) *Tree {
     return e.pushTree("left", value)
