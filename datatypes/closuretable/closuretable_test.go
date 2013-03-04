@@ -3,7 +3,7 @@ package closuretable
 import (
 	"fmt"
 	"github.com/carbocation/util.git/datatypes/binarytree"
-    //"github.com/carbocation/util.git/datatypes/closuretable"
+    "strconv"
 	"math/rand"
 	"testing"
 )
@@ -19,10 +19,10 @@ func TestClosureConversion(t *testing.T) {
 	closuretable := ClosureTable{Relationship{Ancestor: 0, Descendant: 0, Depth: 0}}
 	closuretable.AddChild(Child{Parent: 0, Child: 10})
 	closuretable.AddChild(Child{Parent: 0, Child: 20})
-	closuretable.AddChild(Child{Parent: 20, Child: 30})
+	closuretable.AddChild(Child{Parent: 10, Child: 30})
 	closuretable.AddChild(Child{Parent: 30, Child: 40})
 	closuretable.AddChild(Child{Parent: 20, Child: 50})
-    closuretable.AddChild(Child{Parent: 50, Child: 60})
+    closuretable.AddChild(Child{Parent: 0, Child: 60})
 
 
     // Obligatory boxing step
@@ -33,23 +33,43 @@ func TestClosureConversion(t *testing.T) {
     }
 
 	//Build a tree out of the entries based on the closure table's instructions.
-	tree := walkBody(closuretable.TableToTree(interfaceEntries))
+	tree := closuretable.TableToTree(interfaceEntries)
+    result := sumInts(tree)
 	expected := 210
-
-	if tree != expected {
-		t.Errorf("walkBody(tree) yielded %s, expected %s. Have you made a change that caused the iteration order to become indeterminate, e.g., using a map instead of a slice?", tree, expected)
+	if result != expected {
+		t.Errorf("walkBody(tree) yielded %s, expected %s. Have you made a change that caused the iteration order to become indeterminate, e.g., using a map instead of a slice?", result, expected)
 	}
+
+    sExpected := "0103040205060"
+    sResult := stringInts(tree)
+	if sResult != sExpected {
+		t.Errorf("walkBody(tree) yielded %s, expected %s. Have you made a change that caused the iteration order to become indeterminate, e.g., using a map instead of a slice?", sResult, sExpected)
+	}
+
 }
 
-func walkBody(el *binarytree.Tree) int {
+func sumInts(el *binarytree.Tree) int {
 	if el == nil {
 		return 0
 	}
 
 	out := 0
 	out += el.Value.(int)
-	out += walkBody(el.Left())
-	out += walkBody(el.Right())
+	out += sumInts(el.Left())
+	out += sumInts(el.Right())
+
+	return out
+}
+
+func stringInts(el *binarytree.Tree) string {
+	if el == nil {
+		return ""
+	}
+
+	out := ""
+	out += strconv.Itoa(el.Value.(int))
+	out += stringInts(el.Left())
+	out += stringInts(el.Right())
 
 	return out
 }
