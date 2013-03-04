@@ -119,15 +119,18 @@ func (table *ClosureTable) RootNodeId() (int64, error) {
 	return result, nil
 }
 
-// Takes a map of entries whose keys are the same values as the IDs of the closure table entries
+// Takes map of entries whose keys are the same values as the IDs of the closure table entries
 // Returns a well-formed *binarytree.Tree with those entries as values.
-func (table *ClosureTable) TableToTree(entries []Entry) *binarytree.Tree {
-	// Create the tree from the root node:
+func (table *ClosureTable) TableToTree(entries map[int64]interface{}) *binarytree.Tree {
+    // The strategy here is to create one tree per entry, then to iterate through them 
+    // and correct their parent/child/sibling pointers as we proceed.
+
+    // ID in the map must be the element's ID from the closure table
 	forest := map[int64]*binarytree.Tree{}
 
 	// All entries now are trees
-	for _, entry := range entries {
-		forest[entry.Id] = binarytree.New(entry)
+	for id, entry := range entries {
+		forest[id] = binarytree.New(entry)
 	}
 
 	childparent := table.DepthOneRelationships()

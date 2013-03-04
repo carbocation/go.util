@@ -3,47 +3,51 @@ package closuretable
 import (
 	"fmt"
 	"github.com/carbocation/util.git/datatypes/binarytree"
+    //"github.com/carbocation/util.git/datatypes/closuretable"
 	"math/rand"
 	"testing"
-	"time"
 )
 
 func TestClosureConversion(t *testing.T) {
-	// Make some sample entries based on a skeleton; the Id's will be appropriately distinct.
-	entries := []Entry{
-		Entry{Id: 3905, Title: "Hello, world title.", Body: "This is a basic body.", Created: time.Now(), AuthorId: 1},
-		Entry{Id: 3906, Title: "Frost Psot", Body: "This is a spam post.", Created: time.Now(), AuthorId: 2},
-		Entry{Id: 3907, Title: "Third post", Body: "I want to bury the spam.", Created: time.Now(), AuthorId: 3},
-		Entry{Id: 3908, Title: "Les Mis", Body: "It's being shown on the Oscars now.", Created: time.Now(), AuthorId: 3},
-		Entry{Id: 3909, Title: "LOOL", Body: "Why are you watching those?", Created: time.Now(), AuthorId: 2},
-		Entry{Id: 3910, Title: "Too bad", Body: "I'm here to resurrect the spam.", Created: time.Now(), AuthorId: 2},
+	// Make some sample entries based on a skeleton
+	entries := map[int64]int{
+		0: 0, 10: 10, 20: 20, 30: 30, 40: 40, 50: 50, 60: 60,
 	}
 
 	// Create a closure table to represent the relationships among the entries
 	// In reality, you'd probably directly import the closure table data into the ClosureTable class
-	closuretable := ClosureTable{Relationship{Ancestor: 3905, Descendant: 3905, Depth: 0}}
-	closuretable.AddChild(Child{Parent: 3905, Child: 3906})
-	closuretable.AddChild(Child{Parent: 3905, Child: 3907})
-	closuretable.AddChild(Child{Parent: 3907, Child: 3908})
-	closuretable.AddChild(Child{Parent: 3908, Child: 3909})
-	closuretable.AddChild(Child{Parent: 3905, Child: 3910})
+	closuretable := ClosureTable{Relationship{Ancestor: 0, Descendant: 0, Depth: 0}}
+	closuretable.AddChild(Child{Parent: 0, Child: 10})
+	closuretable.AddChild(Child{Parent: 0, Child: 20})
+	closuretable.AddChild(Child{Parent: 20, Child: 30})
+	closuretable.AddChild(Child{Parent: 30, Child: 40})
+	closuretable.AddChild(Child{Parent: 20, Child: 50})
+    closuretable.AddChild(Child{Parent: 50, Child: 60})
+
+
+    // Obligatory boxing step
+    // Convert to interface type so the generic TableToTree method can be called on these entries
+    interfaceEntries := map[int64]interface{}{}
+    for k, v := range entries {
+        interfaceEntries[k] = v
+    }
 
 	//Build a tree out of the entries based on the closure table's instructions.
-	tree := walkBody(closuretable.TableToTree(entries))
-	expected := "This is a basic body.This is a spam post.I want to bury the spam.It's being shown on the Oscars now.Why are you watching those?I'm here to resurrect the spam."
+	tree := walkBody(closuretable.TableToTree(interfaceEntries))
+	expected := 210
 
 	if tree != expected {
 		t.Errorf("walkBody(tree) yielded %s, expected %s. Have you made a change that caused the iteration order to become indeterminate, e.g., using a map instead of a slice?", tree, expected)
 	}
 }
 
-func walkBody(el *binarytree.Tree) string {
+func walkBody(el *binarytree.Tree) int {
 	if el == nil {
-		return ""
+		return 0
 	}
 
-	out := ""
-	out += el.Value.(Entry).Body
+	out := 0
+	out += el.Value.(int)
 	out += walkBody(el.Left())
 	out += walkBody(el.Right())
 
