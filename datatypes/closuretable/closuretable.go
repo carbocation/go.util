@@ -38,8 +38,8 @@ func EntityExistsError() error {
 }
 
 func New(origin int64) *ClosureTable {
-    r := Relationship{Ancestor: origin, Descendant: origin, Depth: 0,}
-    return &ClosureTable{r}
+	r := Relationship{Ancestor: origin, Descendant: origin, Depth: 0}
+	return &ClosureTable{r}
 }
 
 // AddChild takes a Child, verifies that it is acceptable, verifies that the 
@@ -127,10 +127,10 @@ func (table *ClosureTable) RootNodeId() (int64, error) {
 // Takes map of entries whose keys are the same values as the IDs of the closure table entries
 // Returns a well-formed *binarytree.Tree with those entries as values.
 func (table *ClosureTable) TableToTree(entries map[int64]interface{}) *binarytree.Tree {
-    // The strategy here is to create one tree per entry, then to iterate through them 
-    // and correct their parent/child/sibling pointers as we proceed.
+	// The strategy here is to create one tree per entry, then to iterate through them 
+	// and correct their parent/child/sibling pointers as we proceed.
 
-    // ID in the map must be the element's ID from the closure table
+	// ID in the map must be the element's ID from the closure table
 	forest := map[int64]*binarytree.Tree{}
 
 	// All entries now are trees

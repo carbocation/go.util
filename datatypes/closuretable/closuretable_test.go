@@ -3,8 +3,8 @@ package closuretable
 import (
 	"fmt"
 	"github.com/carbocation/util.git/datatypes/binarytree"
-    "strconv"
 	"math/rand"
+	"strconv"
 	"testing"
 )
 
@@ -16,32 +16,31 @@ func TestClosureConversion(t *testing.T) {
 
 	// Create a closure table to represent the relationships among the entries
 	// In reality, you'd probably directly import the closure table data into the ClosureTable class
-    closuretable := New(0)
+	closuretable := New(0)
 	closuretable.AddChild(Child{Parent: 0, Child: 10})
 	closuretable.AddChild(Child{Parent: 0, Child: 20})
 	closuretable.AddChild(Child{Parent: 10, Child: 30})
 	closuretable.AddChild(Child{Parent: 30, Child: 40})
 	closuretable.AddChild(Child{Parent: 20, Child: 50})
-    closuretable.AddChild(Child{Parent: 0, Child: 60})
+	closuretable.AddChild(Child{Parent: 0, Child: 60})
 
-
-    // Obligatory boxing step
-    // Convert to interface type so the generic TableToTree method can be called on these entries
-    interfaceEntries := map[int64]interface{}{}
-    for k, v := range entries {
-        interfaceEntries[k] = v
-    }
+	// Obligatory boxing step
+	// Convert to interface type so the generic TableToTree method can be called on these entries
+	interfaceEntries := map[int64]interface{}{}
+	for k, v := range entries {
+		interfaceEntries[k] = v
+	}
 
 	//Build a tree out of the entries based on the closure table's instructions.
 	tree := closuretable.TableToTree(interfaceEntries)
-    result := sumInts(tree)
+	result := sumInts(tree)
 	expected := 210
 	if result != expected {
 		t.Errorf("walkBody(tree) yielded %s, expected %s. Have you made a change that caused the iteration order to become indeterminate, e.g., using a map instead of a slice?", result, expected)
 	}
 
-    sExpected := "0103040205060"
-    sResult := stringInts(tree)
+	sExpected := "0103040205060"
+	sResult := stringInts(tree)
 	if sResult != sExpected {
 		t.Errorf("walkBody(tree) yielded %s, expected %s. Have you made a change that caused the iteration order to become indeterminate, e.g., using a map instead of a slice?", sResult, sExpected)
 	}
