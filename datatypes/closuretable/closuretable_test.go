@@ -16,7 +16,7 @@ func TestClosureConversion(t *testing.T) {
 
 	// Create a closure table to represent the relationships among the entries
 	// In reality, you'd probably directly import the closure table data into the ClosureTable class
-	closuretable := ClosureTable{Relationship{Ancestor: 0, Descendant: 0, Depth: 0}}
+    closuretable := New(0)
 	closuretable.AddChild(Child{Parent: 0, Child: 10})
 	closuretable.AddChild(Child{Parent: 0, Child: 20})
 	closuretable.AddChild(Child{Parent: 10, Child: 30})
