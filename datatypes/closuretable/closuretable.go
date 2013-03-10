@@ -37,9 +37,9 @@ func EntityExistsError() error {
 	return errors.New("forum: The entity that you are trying to add to the closure table already exists within it. This operation is not permitted.")
 }
 
-func New(origin int64) ClosureTable {
+func New(origin int64) *ClosureTable {
     r := Relationship{Ancestor: origin, Descendant: origin, Depth: 0,}
-    return ClosureTable{r}
+    return &ClosureTable{r}
 }
 
 // AddChild takes a Child, verifies that it is acceptable, verifies that the 
