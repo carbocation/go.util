@@ -70,6 +70,19 @@ func (table *ClosureTable) AddChild(new Child) error {
 	return nil
 }
 
+// Allows you to add relationships manually
+// Note that this is unsafe, because it relies on you to get all relationships
+// right, instead of building intermediary relationships for you
+func (table *ClosureTable) AddRelationship(r Relationship) error {
+	if len(*table) < 1 {
+		return EmptyTableError.Error(1)
+	}
+	
+	*table = append(*table, r)
+	
+	return nil
+}
+
 func (table *ClosureTable) GetAncestralRelationships(id int64) []Relationship {
 	list := []Relationship{}
 	for _, rel := range *table {
@@ -130,7 +143,8 @@ func (table *ClosureTable) TableToTree(entries map[int64]interface{}) *binarytre
 	// The strategy here is to create one tree per entry, then to iterate through them 
 	// and correct their parent/child/sibling pointers as we proceed.
 
-	// ID in the map must be the element's ID from the closure table
+	// ID in the map must be the element's ID from the closure table 
+	// (specifically, the element's map ID must be the same as its Descendant value)
 	forest := map[int64]*binarytree.Tree{}
 
 	// All entries now are trees
