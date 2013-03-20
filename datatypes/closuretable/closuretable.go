@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/carbocation/util.git/datatypes/binarytree"
 	"sort"
+	"strconv"
 )
 
 // A ClosureTable should represent every direct-line relationship, including self-to-self
@@ -124,10 +125,10 @@ func (table *ClosureTable) RootNodeId() (int64, error) {
 			result = item
 			trip++
 		}
-
-		if trip > 1 {
-			return int64(-1), errors.New("More than one potential root node was present in the closure table.")
-		}
+	}
+	
+	if trip > 1 {
+		return int64(-1), errors.New("Multiple ("+strconv.Itoa(trip)+") potential root nodes were present in the closure table.")
 	}
 
 	if trip < 1 {
@@ -139,7 +140,7 @@ func (table *ClosureTable) RootNodeId() (int64, error) {
 
 // Takes map of entries whose keys are the same values as the IDs of the closure table entries
 // Returns a well-formed *binarytree.Tree with those entries as values.
-func (table *ClosureTable) TableToTree(entries map[int64]interface{}) *binarytree.Tree {
+func (table *ClosureTable) TableToTree(entries map[int64]interface{}) (*binarytree.Tree, error) {
 	// The strategy here is to create one tree per entry, then to iterate through them 
 	// and correct their parent/child/sibling pointers as we proceed.
 
@@ -186,10 +187,10 @@ func (table *ClosureTable) TableToTree(entries map[int64]interface{}) *binarytre
 
 	rootNodeId, err := table.RootNodeId()
 	if err != nil {
-		return &binarytree.Tree{}
+		return &binarytree.Tree{}, err
 	}
 
-	return forest[rootNodeId]
+	return forest[rootNodeId], nil
 }
 
 // Returns a map of the ID of each node along with its maximum depth
