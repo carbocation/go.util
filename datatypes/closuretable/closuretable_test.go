@@ -32,7 +32,10 @@ func TestClosureConversion(t *testing.T) {
 	}
 
 	//Build a tree out of the entries based on the closure table's instructions.
-	tree := closuretable.TableToTree(interfaceEntries)
+	tree, err := closuretable.TableToTree(interfaceEntries); if err != nil {
+		t.Errorf("%s",err)
+	}
+	
 	result := sumInts(tree)
 	expected := 210
 	if result != expected {
