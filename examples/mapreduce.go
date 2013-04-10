@@ -19,17 +19,17 @@ func main() {
 	c := make(chan int64, N)
 
 	//In a separate thread, fill the channel
-	//Instead of deferring a close in the filling channel, we'll explicitly keep 
-	//track of the number of expected channel elements so that we can drain them 
+	//Instead of deferring a close in the filling channel, we'll explicitly keep
+	//track of the number of expected channel elements so that we can drain them
 	//via for loop rather than range loop.
 
-	//This now lets us create multiple goroutines to fill the channel, instead of 
+	//This now lets us create multiple goroutines to fill the channel, instead of
 	//relying on deferred closure from the filling channel which would limit us to 1
 	//filling goroutine at a time.
 
-	//This is basically the map step (arbitrarily, 4 mappers per logical CPU; you want 
-    //at least 1 per logical CPU, and unless you have strong reasons to think all will 
-    //take exactly the same amount of time, you should have a few mappers per logical CPU)
+	//This is basically the map step (arbitrarily, 4 mappers per logical CPU; you want
+	//at least 1 per logical CPU, and unless you have strong reasons to think all will
+	//take exactly the same amount of time, you should have a few mappers per logical CPU)
 	var start, stop int64 = 0, 0
 	numGoRoutines := int64(numCpu * 4)
 	for i := 0; int64(i) < numGoRoutines; i++ {
