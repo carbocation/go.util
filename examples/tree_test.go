@@ -1,18 +1,16 @@
 /*
 This is a test of the binary tree / recursive template parsing example given by Rob Pike 
 in the go-nuts mailing list. It has been updated to be compatible with go 1.0.3+, including 
-1.1beta2. 
+1.1beta2. His post can be found here: https://groups.google.com/d/msg/golang-nuts/wk5IyGzHQf8/BeWnz82qEEwJ
 */
+package main
 
-package binarytree
-/*
 import (
 	"bytes"
 	"html/template"
 	"strings"
 	"testing"
 )
-
 
 // Tree is a binary tree.
 type Tree struct {
@@ -97,4 +95,3 @@ func TestTree(t *testing.T) {
 		t.Errorf("expected %q got %q", expect, result)
 	}
 }
-*/
