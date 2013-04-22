@@ -2,7 +2,7 @@ package closuretable
 
 import (
 	"fmt"
-	"github.com/carbocation/util.git/datatypes/binarytree"
+	"github.com/carbocation/go.util/datatypes/binarytree"
 	"math/rand"
 	"strconv"
 	"testing"

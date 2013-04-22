@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/carbocation/util.git/str"
+	"github.com/carbocation/go.util/str"
 	"os"
 )
 
