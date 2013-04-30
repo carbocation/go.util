@@ -2,9 +2,10 @@ package closuretable
 
 import (
 	"errors"
-	"github.com/carbocation/go.util/datatypes/binarytree"
+	"fmt"
 	"sort"
-	"strconv"
+
+	"github.com/carbocation/go.util/datatypes/binarytree"
 )
 
 // A ClosureTable should represent every direct-line relationship, including self-to-self
@@ -24,18 +25,8 @@ type Child struct {
 	Child  int64
 }
 
-type EmptyTableError int
-
-func (e EmptyTableError) Error() error {
-	return errors.New("forum: The closure table is empty, so a parent cannot exist, so a child cannot be added.")
-}
-
-func ParentDoesNotExistError() error {
-	return errors.New("forum: The closure table contains no record of the requested parent, so no child can be created.")
-}
-
-func EntityExistsError() error {
-	return errors.New("forum: The entity that you are trying to add to the closure table already exists within it. This operation is not permitted.")
+func (ct *ClosureTable) Size() int {
+	return len(*ct)
 }
 
 func New(origin int64) *ClosureTable {
@@ -47,16 +38,16 @@ func New(origin int64) *ClosureTable {
 // ClosureTable is suitable to accept a child, and then creates the appropriate 
 // Relationships within the ClosureTable to instantiate that child.
 func (table *ClosureTable) AddChild(new Child) error {
-	if len(*table) < 1 {
-		return EmptyTableError.Error(1)
+	if table.Size() < 1 {
+		return errors.New("closuretable.AddChild: The current closure table has no entries, so the Child, " + fmt.Sprintf("%d", new.Child) + " cannot be added.\n")
 	}
 
-	if table.EntityExists(new.Parent) != true {
-		return ParentDoesNotExistError()
+	if !table.EntityExists(new.Parent) {
+		return errors.New("closuretable.AddChild: The Parent (" + fmt.Sprintf("%d", new.Parent) + ") of the Child (" + fmt.Sprintf("%d", new.Child) + ") does not exist in the table (" + fmt.Sprintf("%+v", table) + ").\n")
 	}
 
 	if table.EntityExists(new.Child) {
-		return EntityExistsError()
+		return errors.New("closuretable.AddChild: The Child (" + fmt.Sprintf("%d", new.Parent) + ") of the Parent (" + fmt.Sprintf("%d", new.Child) + ") does not exist in the table.\n")
 	}
 
 	// It checks out, create all of the consequent ancestral relationships:
@@ -75,12 +66,8 @@ func (table *ClosureTable) AddChild(new Child) error {
 // Note that this is unsafe, because it relies on you to get all relationships
 // right, instead of building intermediary relationships for you
 func (table *ClosureTable) AddRelationship(r Relationship) error {
-	if len(*table) < 1 {
-		return EmptyTableError.Error(1)
-	}
-	
 	*table = append(*table, r)
-	
+
 	return nil
 }
 
@@ -118,21 +105,24 @@ func (table *ClosureTable) RootNodeId() (int64, error) {
 		m[rel.Descendant]++
 	}
 
-	trip := 0
+	//This relies on the fact that every entry has one ancestor/descendant relationship 
+	// for itself, and at least one for every other element it's related to.
+	//A root entry will be descended from just one element (itself) 
+	rootsFound := 0
 	var result int64
-	for item, count := range m {
-		if count == 1 {
-			result = item
-			trip++
+	for id, occurrences := range m {
+		if occurrences == 1 {
+			result = id
+			rootsFound++
 		}
 	}
-	
-	if trip > 1 {
-		return int64(-1), errors.New("Multiple ("+strconv.Itoa(trip)+") potential root nodes were present in the closure table.")
+
+	if rootsFound > 1 {
+		return int64(-1), errors.New("closuretable.RootNodeID: Multiple (" + fmt.Sprint(rootsFound) + ") potential root nodes were present in the closure table (" + fmt.Sprintf("%+v", table) + ".\n")
 	}
 
-	if trip < 1 {
-		return int64(-1), errors.New("No potential root nodes were present in the closure table.")
+	if rootsFound < 1 {
+		return int64(-1), errors.New("closuretable.RootNodeID: No potential root nodes were present in the closure table.\n")
 	}
 
 	return result, nil
