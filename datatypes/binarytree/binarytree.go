@@ -72,7 +72,50 @@ func (e *Tree) pushTree(direction string, value interface{}) *Tree {
 	return el
 }
 
-// Traverse the tree and send output to a channel
+// Find the root node of the entire tree
+func (el *Tree) Root() *Tree {
+	if el.Parent() == nil {
+		return el
+	}
+	
+	return el.Parent().Root()
+}
+
+func (el *Tree) Len() int {
+	r := el.Root()
+	
+	return r.count()
+}
+
+func (el *Tree) count() int {
+	if el == nil {
+		return 0
+	}
+	
+	return 1 + el.Left().count() + el.Right().count()
+}
+/*	
+	ch := make(chan interface{})
+	go func() {
+		el.Traverse(ch)
+		close(ch)
+	}()
+	return ch
+}
+*/
+
+func (el *Tree) Traverse(ch chan interface{}) {
+	if el == nil {
+		return
+	}
+	
+	ch <- el.Value
+	el.parent.Traverse(ch) //Also traverse up the parent
+	el.left.Traverse(ch)
+	el.right.Traverse(ch)
+} 
+
+// Walk the tree and send output to a channel
 // Note that this is simply one reference implementation. For some applications, 
 // e.g., threaded discussion, something like this would be implemented in the view.
 func Walk(el *Tree, ch chan interface{}) {
