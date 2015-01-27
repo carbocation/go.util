@@ -30,8 +30,8 @@ func main() {
 	
 	fuxored := make([]complex128, len(original))
 	copy(fuxored, transformed)
-	for k, _ := range fuxored {
-		if k > 100 && k < len(fuxored)-100 {
+	for k, v := range fuxored {
+		if cmplx.Abs(v) < 500 {
 			fuxored[k] = 0 
 		}
 	}
