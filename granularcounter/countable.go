@@ -2,6 +2,7 @@ package granularcounter
 
 type Countable interface {
 	Count() int
+	Add(int)
 }
 
 type countable struct {
@@ -13,6 +14,10 @@ func (c countable) Count() int {
 	return c.val
 }
 
-func MakeCountable(v int) countable {
-	return countable{val: v}
+func (c *countable) Add(v int) {
+	c.val += v
+}
+
+func MakeCountable(v int) *countable {
+	return &countable{val: v}
 }

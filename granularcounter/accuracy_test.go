@@ -10,17 +10,17 @@ const (
 )
 
 func TestMinuteDay(t *testing.T) {
-	min := NewGranularCounter(Minute, MaxPerMin)
-	hour := min.NewParent(Hour, 60)
-	day := hour.NewParent(Day, 24)
+	counter := NewGranularCounter(MaxPerMin)
+	hour := counter.NewParent(Minute, 60)
+	day := hour.NewParent(Hour, 24)
 
 	for i := 0; i < 2000; i++ {
-		if min.SumChildren() >= MaxPerMin || day.SumChildren() >= MaxPerDay {
+		if counter.SumChildren() >= MaxPerMin || day.SumChildren() >= MaxPerDay {
 			//t.Log("Over quota")
 			continue
 		}
 
-		min.Add(MakeCountable(1))
+		counter.Add(MakeCountable(1))
 	}
 
 	if actual := day.SumChildren(); actual > MaxPerMin {
@@ -28,4 +28,16 @@ func TestMinuteDay(t *testing.T) {
 	}
 
 	t.Log(day.SumChildren())
+}
+
+func TestSecondSecond(t *testing.T) {
+	counter := NewGranularCounter(100)
+	sec2 := counter.NewParent(Millisecond, 100)
+	sec3 := sec2.NewParent(Minute, 100)
+
+	for i := 0; i < 2000; i++ {
+		counter.Add(MakeCountable(1))
+	}
+
+	t.Log("Largest:", sec3.SumChildren(), "Large:", sec2.SumChildren(), "Small:", counter.SumChildren())
 }

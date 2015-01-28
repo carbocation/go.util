@@ -6,14 +6,15 @@ import (
 	"github.com/zfjagann/golang-ring"
 )
 
-func NewGranularCounter(nameFunc func() int, sliverCap int) *GranularCounter {
+func NewGranularCounter(bufferCap int) *GranularCounter {
 	g := &GranularCounter{
-		slivers:  &ring.Ring{},
-		nameFunc: nameFunc,
-		lastName: -1,
+		buffer:     &ring.Ring{},
+		bufferCap:  bufferCap,
+		bufferUsed: 0,
+		lastName:   -1,
 	}
 
-	g.slivers.SetCapacity(sliverCap)
+	g.buffer.SetCapacity(bufferCap)
 
 	return g
 }
@@ -22,19 +23,21 @@ type GranularCounter struct {
 	parent *GranularCounter
 	child  *GranularCounter
 
-	slivers *ring.Ring
+	buffer     *ring.Ring
+	bufferCap  int // Total slots
+	bufferUsed int // Non-empty slots
 
 	//The most recent chunk encountered by an Add call
 	lastName int
 
-	// Dictates when the slivers should be accumulated into a slice of the parent
+	// Dictates when the child's buffer should be accumulated into a buffer of this counter
 	nameFunc func() int
 
 	sync.RWMutex
 }
 
 func (g *GranularCounter) Values() []interface{} {
-	return g.slivers.Values()
+	return g.buffer.Values()
 }
 
 func (g *GranularCounter) SumChildren() int {
@@ -53,7 +56,7 @@ func (g *GranularCounter) Len() int {
 	g.RLock()
 	defer g.RUnlock()
 
-	return len(g.slivers.Values())
+	return len(g.buffer.Values())
 }
 
 func (g *GranularCounter) Sum() int {
@@ -61,15 +64,16 @@ func (g *GranularCounter) Sum() int {
 	defer g.RUnlock()
 
 	sum := 0
-	for _, val := range g.slivers.Values() {
+	for _, val := range g.buffer.Values() {
 		sum += val.(Countable).Count()
 	}
 
 	return sum
 }
 
-func (g *GranularCounter) NewParent(nameFunc func() int, sliverCap int) *GranularCounter {
-	parent := NewGranularCounter(nameFunc, sliverCap)
+func (g *GranularCounter) NewParent(nameFunc func() int, bufferCap int) *GranularCounter {
+	parent := NewGranularCounter(bufferCap)
+	parent.nameFunc = nameFunc
 	g.parent = parent
 	parent.child = g
 
@@ -80,30 +84,45 @@ func (g *GranularCounter) Add(v Countable) {
 	g.Lock()
 	defer g.Unlock()
 
-	if name := g.nameFunc(); name != g.lastName && g.parent != nil {
-		g.Unlock()
-		g.parent.Add(countable{name: name, val: g.Sum()})
-		g.Lock()
+	if g.parent != nil {
+		// If the parent's naming function yields a new result, we can shove
+		// the current data into the parent's data buffer and empty our buffer
+		if name := g.parent.nameFunc(); name != g.lastName {
+			g.Unlock()
+			g.parent.Add(&countable{name: name, val: g.Sum()})
+			g.Lock()
 
-		g.lastName = name
+			g.lastName = name
 
-		// Reset the sliver buffer, but preserve its capacity
-		cap := g.slivers.Capacity()
-		g.slivers = &ring.Ring{}
-		g.slivers.SetCapacity(cap)
+			// Reset the buffer, but preserve its capacity
+			g.buffer = &ring.Ring{}
+			g.buffer.SetCapacity(g.bufferCap)
+			g.bufferUsed = 1
+
+			// Add the new value
+			g.buffer.Enqueue(v)
+
+			return
+		} else if g.bufferUsed == g.bufferCap {
+			// If it is not time to roll up the data into the parent, but the
+			// buffer is at capacity, we will start adding to minimize loss
+			g.Unlock()
+			elem := g.buffer.Dequeue().(Countable)
+			elem.Add(v.Count())
+			g.buffer.Enqueue(elem)
+			g.Lock()
+
+			return
+		}
+		// If the buffer is not full and the parent's naming function does not
+		// yield a new result, continue with the usual enqueue call
 	}
 
-	// What to do when we go above capacity?
-	/*
-		if g.slivers.Peek() != nil {
-			g.Unlock()
+	// We only roll up into a parent buffer if there is a parent
+	// Otherwise we continuously add to a ring buffer
+	g.buffer.Enqueue(v)
+	if g.bufferUsed < g.bufferCap {
+		g.bufferUsed++
+	}
 
-			oldV := g.slivers.Dequeue().(int)
-			v += oldV
-
-			g.Lock()
-		}
-	*/
-
-	g.slivers.Enqueue(v)
 }

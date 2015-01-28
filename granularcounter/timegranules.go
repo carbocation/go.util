@@ -22,6 +22,13 @@ func Millisecond() int {
 	return t.Nanosecond() / 1000000
 }
 
+// Qsec yields a quarter of a second
+func Qsec() int {
+	t := time.Now()
+
+	return (t.Nanosecond() * 4 / 1000000000)
+}
+
 func Second() int {
 	t := time.Now()
 
@@ -44,4 +51,8 @@ func Day() int {
 	t := time.Now()
 
 	return t.Day()
+}
+
+func Forever() int {
+	return 1
 }
