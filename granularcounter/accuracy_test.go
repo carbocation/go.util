@@ -10,9 +10,9 @@ const (
 )
 
 func TestMinuteDay(t *testing.T) {
-	min := NewGranularCounter(minute, 240)
-	hour := min.NewParent(hour, 60)
-	day := hour.NewParent(day, 24)
+	min := NewGranularCounter(Minute, MaxPerMin)
+	hour := min.NewParent(Hour, 60)
+	day := hour.NewParent(Day, 24)
 
 	for i := 0; i < 2000; i++ {
 		if min.SumChildren() >= MaxPerMin || day.SumChildren() >= MaxPerDay {

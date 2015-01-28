@@ -6,8 +6,8 @@ import (
 	"github.com/zfjagann/golang-ring"
 )
 
-func NewGranularCounter(nameFunc func() int, sliverCap int) *granularCounter {
-	g := &granularCounter{
+func NewGranularCounter(nameFunc func() int, sliverCap int) *GranularCounter {
+	g := &GranularCounter{
 		slivers:  &ring.Ring{},
 		nameFunc: nameFunc,
 		lastName: -1,
@@ -18,9 +18,9 @@ func NewGranularCounter(nameFunc func() int, sliverCap int) *granularCounter {
 	return g
 }
 
-type granularCounter struct {
-	parent *granularCounter
-	child  *granularCounter
+type GranularCounter struct {
+	parent *GranularCounter
+	child  *GranularCounter
 
 	slivers *ring.Ring
 
@@ -33,11 +33,11 @@ type granularCounter struct {
 	sync.RWMutex
 }
 
-func (g *granularCounter) Values() []interface{} {
+func (g *GranularCounter) Values() []interface{} {
 	return g.slivers.Values()
 }
 
-func (g *granularCounter) SumChildren() int {
+func (g *GranularCounter) SumChildren() int {
 	g.RLock()
 	defer g.RUnlock()
 
@@ -49,14 +49,14 @@ func (g *granularCounter) SumChildren() int {
 	return sum
 }
 
-func (g *granularCounter) Len() int {
+func (g *GranularCounter) Len() int {
 	g.RLock()
 	defer g.RUnlock()
 
 	return len(g.slivers.Values())
 }
 
-func (g *granularCounter) Sum() int {
+func (g *GranularCounter) Sum() int {
 	g.RLock()
 	defer g.RUnlock()
 
@@ -68,7 +68,7 @@ func (g *granularCounter) Sum() int {
 	return sum
 }
 
-func (g *granularCounter) NewParent(nameFunc func() int, sliverCap int) *granularCounter {
+func (g *GranularCounter) NewParent(nameFunc func() int, sliverCap int) *GranularCounter {
 	parent := NewGranularCounter(nameFunc, sliverCap)
 	g.parent = parent
 	parent.child = g
@@ -76,7 +76,7 @@ func (g *granularCounter) NewParent(nameFunc func() int, sliverCap int) *granula
 	return parent
 }
 
-func (g *granularCounter) Add(v Countable) {
+func (g *GranularCounter) Add(v Countable) {
 	g.Lock()
 	defer g.Unlock()
 
