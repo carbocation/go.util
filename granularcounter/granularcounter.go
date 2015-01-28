@@ -7,46 +7,102 @@ import (
 	"github.com/zfjagann/golang-ring"
 )
 
-type granularCounter struct {
-	chunks  *ring.Ring
-	slivers *ring.Ring
-
-	//The most recent chunk encountered by an Add call
-	lastChunkName int
-
-	//The number of Adds() accumulated across all chunks
-	chunkSum int
-
-	// Dictates when the slivers should be accumulated into the next chunk
-	chunkFunc func() int
-
-	sync.RWMutex
-}
-
-func NewGranularCounter(chunkFunc func() int, chunkCap, sliverCap int) *granularCounter {
+func NewGranularCounter(nameFunc func() int, sliverCap int) *granularCounter {
 	g := &granularCounter{
-		chunks:    &ring.Ring{},
-		slivers:   &ring.Ring{},
-		chunkFunc: chunkFunc,
+		slivers:  &ring.Ring{},
+		nameFunc: nameFunc,
+		lastName: -1,
 	}
-	g.lastChunkName = -1
 
-	g.chunks.SetCapacity(chunkCap)
 	g.slivers.SetCapacity(sliverCap)
 
 	return g
 }
 
-func minute() int {
-	t := time.Now()
+type granularCounter struct {
+	parent *granularCounter
+	child  *granularCounter
 
-	return t.Minute()
+	slivers *ring.Ring
+
+	//The most recent chunk encountered by an Add call
+	lastName int
+
+	// Dictates when the slivers should be accumulated into a slice of the parent
+	nameFunc func() int
+
+	sync.RWMutex
 }
 
-func second() int {
-	t := time.Now()
+func (g *granularCounter) SumChildren() int {
+	g.RLock()
+	defer g.RUnlock()
 
-	return t.Second()
+	sum := g.Sum()
+	if g.child != nil {
+		sum += g.child.SumChildren()
+	}
+
+	return sum
+}
+
+func (g *granularCounter) Len() int {
+	g.RLock()
+	defer g.RUnlock()
+
+	return len(g.slivers.Values())
+}
+
+func (g *granularCounter) Sum() int {
+	g.RLock()
+	defer g.RUnlock()
+
+	sum := 0
+	for _, val := range g.slivers.Values() {
+		sum += val.(int)
+	}
+
+	return sum
+}
+
+func (g *granularCounter) NewParent(nameFunc func() int, sliverCap int) *granularCounter {
+	parent := NewGranularCounter(nameFunc, sliverCap)
+	g.parent = parent
+	parent.child = g
+
+	return parent
+}
+
+func (g *granularCounter) Add(v int) {
+	g.Lock()
+	defer g.Unlock()
+
+	if name := g.nameFunc(); name != g.lastName && g.parent != nil {
+		g.lastName = name
+
+		g.Unlock()
+		g.parent.Add(g.Sum())
+		g.Lock()
+
+		// Reset the sliver buffer, but preserve its capacity
+		cap := g.slivers.Capacity()
+		g.slivers = &ring.Ring{}
+		g.slivers.SetCapacity(cap)
+	}
+
+	// What to do when we go above capacity?
+	/*
+		if g.slivers.Peek() != nil {
+			g.Unlock()
+
+			oldV := g.slivers.Dequeue().(int)
+			v += oldV
+
+			g.Lock()
+		}
+	*/
+
+	g.slivers.Enqueue(v)
 }
 
 func nanosecond() int {
@@ -55,48 +111,26 @@ func nanosecond() int {
 	return t.Nanosecond()
 }
 
-func (g *granularCounter) Add() {
-	g.Lock()
-	defer g.Unlock()
+func microsecond() int {
+	t := time.Now()
 
-	if chunkName := g.chunkFunc(); chunkName != g.lastChunkName {
-		chunk := &granule{Name: chunkName, Count: len(g.slivers.Values())}
-
-		g.chunkSum += chunk.Count
-
-		nextSlot, ok := g.chunks.Peek().(*granule)
-		if ok && nextSlot != nil && nextSlot.Name == chunk.Name {
-			// Rolling over chunk of the same name
-			g.chunkSum -= nextSlot.Count
-		}
-
-		g.chunks.Enqueue(chunk)
-		g.lastChunkName = chunkName
-
-		// Reset the sliver buffer, but preserve its capacity
-		cap := g.slivers.Capacity()
-		g.slivers = &ring.Ring{}
-		g.slivers.SetCapacity(cap)
-	}
-
-	g.slivers.Enqueue(struct{}{})
+	return t.Nanosecond() / 1000
 }
 
-func (g *granularCounter) CountSlivers() int {
-	g.RLock()
-	defer g.RUnlock()
+func millisecond() int {
+	t := time.Now()
 
-	return len(g.slivers.Values())
+	return t.Nanosecond() / 1000000
 }
 
-func (g *granularCounter) CountChunks() int {
-	g.RLock()
-	defer g.RUnlock()
+func second() int {
+	t := time.Now()
 
-	return g.chunkSum + len(g.slivers.Values())
+	return t.Second()
 }
 
-type granule struct {
-	Name  int
-	Count int
+func minute() int {
+	t := time.Now()
+
+	return t.Minute()
 }

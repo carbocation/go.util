@@ -5,37 +5,21 @@ import (
 )
 
 func BenchmarkAddMinute(b *testing.B) {
-	chunkCap, sliverCap := 60, 10000
+	//b.Log("Starting again for", b.N)
 
-	gc := NewGranularCounter(minute, chunkCap, sliverCap)
-
-	for i := 0; i < b.N; i++ {
-		gc.Add()
-	}
-
-	b.Log(b.N, "Events this sliver (minute):", gc.CountSlivers(), "Events across all", chunkCap, "chunks:", gc.CountChunks())
-}
-
-func BenchmarkAddSecond(b *testing.B) {
-	chunkCap, sliverCap := 60, 10000
-
-	gc := NewGranularCounter(second, chunkCap, sliverCap)
+	//nsec := NewGranularCounter(nanosecond, 10)
+	//usec := NewGranularCounter(microsecond, 10)
+	msec := NewGranularCounter(millisecond, 5000)
+	sec := msec.NewParent(second, 1000)
+	min := sec.NewParent(minute, 60)
 
 	for i := 0; i < b.N; i++ {
-		gc.Add()
+		msec.Add(1)
 	}
 
-	b.Log(b.N, "Events this sliver (second):", gc.CountSlivers(), "Events across all", chunkCap, "chunks:", gc.CountChunks())
-}
-
-func BenchmarkAddNanosecond(b *testing.B) {
-	chunkCap, sliverCap := 1000000, 2
-
-	gc := NewGranularCounter(nanosecond, chunkCap, sliverCap)
-
-	for i := 0; i < b.N; i++ {
-		gc.Add()
-	}
-
-	b.Log(b.N, "Events this sliver (nanosecond):", gc.CountSlivers(), "Events across all", chunkCap, "chunks:", gc.CountChunks())
+	b.Log(b.N, "events. Total (minute):", min.SumChildren(), min.Len(),
+		"Last second:", sec.SumChildren(), sec.Len(),
+		"Last millisecond:", msec.SumChildren(), msec.Len(),
+		//"Last usecond:", usec.SumChildren(), usec.Len(),
+	)
 }
