@@ -62,3 +62,15 @@ func minute() int {
 
 	return t.Minute()
 }
+
+func hour() int {
+	t := time.Now()
+
+	return t.Hour()
+}
+
+func day() int {
+	t := time.Now()
+
+	return t.Day()
+}
