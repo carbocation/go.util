@@ -2,7 +2,6 @@ package granularcounter
 
 import (
 	"sync"
-	"time"
 
 	"github.com/zfjagann/golang-ring"
 )
@@ -34,6 +33,10 @@ type granularCounter struct {
 	sync.RWMutex
 }
 
+func (g *granularCounter) Values() []interface{} {
+	return g.slivers.Values()
+}
+
 func (g *granularCounter) SumChildren() int {
 	g.RLock()
 	defer g.RUnlock()
@@ -59,7 +62,7 @@ func (g *granularCounter) Sum() int {
 
 	sum := 0
 	for _, val := range g.slivers.Values() {
-		sum += val.(int)
+		sum += val.(Countable).Count()
 	}
 
 	return sum
@@ -73,16 +76,16 @@ func (g *granularCounter) NewParent(nameFunc func() int, sliverCap int) *granula
 	return parent
 }
 
-func (g *granularCounter) Add(v int) {
+func (g *granularCounter) Add(v Countable) {
 	g.Lock()
 	defer g.Unlock()
 
 	if name := g.nameFunc(); name != g.lastName && g.parent != nil {
-		g.lastName = name
-
 		g.Unlock()
-		g.parent.Add(g.Sum())
+		g.parent.Add(countable{name: name, val: g.Sum()})
 		g.Lock()
+
+		g.lastName = name
 
 		// Reset the sliver buffer, but preserve its capacity
 		cap := g.slivers.Capacity()
@@ -103,34 +106,4 @@ func (g *granularCounter) Add(v int) {
 	*/
 
 	g.slivers.Enqueue(v)
-}
-
-func nanosecond() int {
-	t := time.Now()
-
-	return t.Nanosecond()
-}
-
-func microsecond() int {
-	t := time.Now()
-
-	return t.Nanosecond() / 1000
-}
-
-func millisecond() int {
-	t := time.Now()
-
-	return t.Nanosecond() / 1000000
-}
-
-func second() int {
-	t := time.Now()
-
-	return t.Second()
-}
-
-func minute() int {
-	t := time.Now()
-
-	return t.Minute()
 }
